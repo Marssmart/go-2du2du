@@ -3,7 +3,6 @@ package objects
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"go-2du2du/constants"
-	"image/color"
 )
 
 type Game struct {
@@ -27,9 +26,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Clear()
-	screen.Fill(color.White)
-	screen.DrawImage(g.player.Icon().File(), g.player.Icon().Options())
+	g.player.Draw(screen)
 }
 
 func (g *Game) Layout(int, int) (screenWidth int, screenHeight int) {

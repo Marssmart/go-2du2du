@@ -1,4 +1,4 @@
-package utils
+package objects
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
@@ -14,8 +14,9 @@ func Center(bounds *image.Rectangle) (float64, float64) {
 	return midX - adjustmentX, midY - adjustmentY
 }
 
-func ScaledOptions(x float64, y float64) *ebiten.DrawImageOptions {
+func ScaledOptions(x float64, y float64, r Position) *ebiten.DrawImageOptions {
 	options := &ebiten.DrawImageOptions{}
+	options.GeoM.Rotate(r.Offset().InRadians() + r.Current().InRadians())
 	options.GeoM.Scale(constants.PlayerScale, constants.PlayerScale)
 	options.GeoM.Translate(x, y)
 	return options

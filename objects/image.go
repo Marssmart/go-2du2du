@@ -4,7 +4,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"go-2du2du/constants"
-	"go-2du2du/utils"
 	"log"
 )
 
@@ -14,10 +13,34 @@ type CachedImage interface {
 	Update(input Input)
 }
 
+type Position interface {
+	Update(input Input)
+	UpdateCoordinates(x *boundaryCoordinate, y *boundaryCoordinate)
+	UpdateCoordinatePositionX(x float64)
+	UpdateCoordinatePositionY(y float64)
+	Offset() *degrees
+	Current() *degrees
+	X() *boundaryCoordinate
+	Y() *boundaryCoordinate
+}
+
 func NewImage(path *string) CachedImage {
-	image := &cachedImage{path: path}
+	var offset degrees = -45
+	var current degrees = 0
+	image := &cachedImage{path: path, position: &position{rotationOffset: &offset, currentAngle: &current}}
 	image.Load()
 	return image
+}
+
+type degrees float64
+
+type position struct {
+	//how many degrees the image has to be rotated to face up
+	rotationOffset *degrees
+	// degrees of rotation
+	currentAngle *degrees
+	x            *boundaryCoordinate
+	y            *boundaryCoordinate
 }
 
 type boundaryCoordinate struct {
@@ -27,20 +50,68 @@ type boundaryCoordinate struct {
 }
 
 type cachedImage struct {
-	path    *string
-	file    *ebiten.Image
-	options *ebiten.DrawImageOptions
-	x       *boundaryCoordinate
-	y       *boundaryCoordinate
+	path     *string
+	file     *ebiten.Image
+	options  *ebiten.DrawImageOptions
+	position Position
 }
 
-func (b *boundaryCoordinate) Update(value float64) bool {
-	newValue := *b.current + value
-	if newValue >= *b.min && newValue <= *b.max {
-		b.current = &newValue
-		return true
+func (d *degrees) InRadians() float64 {
+	return float64(*d) * (constants.PI / 180)
+}
+
+func (r *position) Update(i Input) {
+	//TODO fix rotation counterclockwise
+	if i.HasChanged() {
+		switch i.LastInput() {
+		case KeyUp:
+			r.currentAngle.update(0)
+		case KeyDown:
+			r.currentAngle.update(180)
+		case KeyLeft:
+			r.currentAngle.update(270)
+		case KeyRight:
+			r.currentAngle.update(90)
+		default:
+			//noop
+		}
 	}
-	return false
+}
+
+func (r *position) Offset() *degrees {
+	return r.rotationOffset
+}
+
+func (r *position) Current() *degrees {
+	return r.currentAngle
+}
+
+func (r *position) X() *boundaryCoordinate {
+	return r.x
+}
+
+func (r *position) Y() *boundaryCoordinate {
+	return r.y
+}
+
+func (r *position) UpdateCoordinates(x *boundaryCoordinate, y *boundaryCoordinate) {
+	r.x = x
+	r.y = y
+}
+
+func (r *position) UpdateCoordinatePositionX(adjustment float64) {
+	newValue := *r.x.current + adjustment
+	r.x.current = &newValue
+}
+
+func (r *position) UpdateCoordinatePositionY(adjustment float64) {
+	newValue := *r.y.current + adjustment
+	r.y.current = &newValue
+}
+
+func (d *degrees) update(newValue float64) {
+	newRotation := degrees(newValue)
+	*d = newRotation
 }
 
 func (i *cachedImage) Load() {
@@ -49,45 +120,45 @@ func (i *cachedImage) Load() {
 		log.Fatalf("Failed to preload image %v", i.path)
 	}
 	bounds := file.Bounds()
-	x, y := utils.Center(&bounds)
-	i.options = utils.ScaledOptions(x, y)
+	x, y := Center(&bounds)
+	i.options = ScaledOptions(x, y, i.position)
 	i.file = file
 	var padding float64 = 5
 	var width float64 = constants.ScreenWidth
 	var height float64 = constants.ScreenHeight
-	i.x = &boundaryCoordinate{
+
+	i.position.UpdateCoordinates(&boundaryCoordinate{
 		current: &x,
 		min:     &padding,
 		max:     &width,
-	}
-	i.y = &boundaryCoordinate{
+	}, &boundaryCoordinate{
 		current: &y,
 		min:     &padding,
 		max:     &height,
-	}
+	})
 }
 
 func (i *cachedImage) Update(input Input) {
 	if input.HasChanged() {
-		//log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
 		switch input.LastInput() {
 		case KeyDown:
-			i.y.Update(5)
+			i.position.UpdateCoordinatePositionY(5)
 		case KeyLeft:
-			i.x.Update(-5)
+			i.position.UpdateCoordinatePositionX(-5)
 		case KeyRight:
-			i.x.Update(5)
+			i.position.UpdateCoordinatePositionX(5)
 		case KeyUp:
-			i.y.Update(-5)
+			i.position.UpdateCoordinatePositionY(-5)
 		default:
 		}
-		//log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
-		updateGeometry(&i.Options().GeoM, i.x, i.y)
+		i.position.Update(input)
+		updateGeometry(&i.Options().GeoM, i.position.X(), i.position.Y(), i.position)
 	}
 }
 
-func updateGeometry(geometry *ebiten.GeoM, x *boundaryCoordinate, y *boundaryCoordinate) {
+func updateGeometry(geometry *ebiten.GeoM, x *boundaryCoordinate, y *boundaryCoordinate, r Position) {
 	geometry.Reset()
+	geometry.Rotate(r.Offset().InRadians() + r.Current().InRadians())
 	geometry.Scale(constants.PlayerScale, constants.PlayerScale)
 	geometry.Translate(*x.current, *y.current)
 }
