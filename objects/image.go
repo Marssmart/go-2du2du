@@ -20,12 +20,27 @@ func NewImage(path *string) CachedImage {
 	return image
 }
 
+type boundaryCoordinate struct {
+	current *float64
+	min     *float64
+	max     *float64
+}
+
 type cachedImage struct {
 	path    *string
 	file    *ebiten.Image
 	options *ebiten.DrawImageOptions
-	x       float64
-	y       float64
+	x       *boundaryCoordinate
+	y       *boundaryCoordinate
+}
+
+func (b *boundaryCoordinate) Update(value float64) bool {
+	newValue := *b.current + value
+	if newValue >= *b.min && newValue <= *b.max {
+		b.current = &newValue
+		return true
+	}
+	return false
 }
 
 func (i *cachedImage) Load() {
@@ -37,33 +52,44 @@ func (i *cachedImage) Load() {
 	x, y := utils.Center(&bounds)
 	i.options = utils.ScaledOptions(x, y)
 	i.file = file
-	i.x = x
-	i.y = y
+	var padding float64 = 5
+	var width float64 = constants.ScreenWidth
+	var height float64 = constants.ScreenHeight
+	i.x = &boundaryCoordinate{
+		current: &x,
+		min:     &padding,
+		max:     &width,
+	}
+	i.y = &boundaryCoordinate{
+		current: &y,
+		min:     &padding,
+		max:     &height,
+	}
 }
 
 func (i *cachedImage) Update(input Input) {
 	if input.HasChanged() {
-		log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
+		//log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
 		switch input.LastInput() {
 		case KeyDown:
-			i.y = i.y + 5
+			i.y.Update(5)
 		case KeyLeft:
-			i.x = i.x - 5
+			i.x.Update(-5)
 		case KeyRight:
-			i.x = i.x + 5
+			i.x.Update(5)
 		case KeyUp:
-			i.y = i.y - 5
+			i.y.Update(-5)
 		default:
 		}
-		log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
-		updateGeometry(&i.Options().GeoM, &i.x, &i.y)
+		//log.Printf("Player icon coordnates before (%v,%v)", i.x, i.y)
+		updateGeometry(&i.Options().GeoM, i.x, i.y)
 	}
 }
 
-func updateGeometry(geometry *ebiten.GeoM, x *float64, y *float64) {
+func updateGeometry(geometry *ebiten.GeoM, x *boundaryCoordinate, y *boundaryCoordinate) {
 	geometry.Reset()
 	geometry.Scale(constants.PlayerScale, constants.PlayerScale)
-	geometry.Translate(*x, *y)
+	geometry.Translate(*x.current, *y.current)
 }
 
 func (i *cachedImage) File() *ebiten.Image {
