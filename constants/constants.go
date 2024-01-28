@@ -1,7 +1,5 @@
 package constants
 
-const ScreenWidth = 320
-const ScreenHeight = 240
-const PlayerScale = 0.025
-const PlayerIconPath = "assets/paper-plane.png"
-const PI = 3.14
+const ScreenWidth = 640
+const ScreenHeight = 480
+const PlayerIconPath = "assets/cricket_16x16.png"

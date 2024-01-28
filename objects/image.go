@@ -14,9 +14,8 @@ type CachedImage interface {
 }
 
 func NewImage(path *string) CachedImage {
-	var offset degrees = -45
-	var current degrees = 0
-	image := &cachedImage{path: path, position: &position{rotationOffset: &offset, currentAngle: &current}}
+
+	image := &cachedImage{path: path, position: &position{}}
 	image.Load()
 	return image
 }
@@ -35,7 +34,7 @@ func (i *cachedImage) Load() {
 	}
 	bounds := file.Bounds()
 	x, y := Center(&bounds)
-	i.options = ScaledOptions(x, y, i.position)
+	i.options = ScaledOptions(x, y)
 	i.file = file
 	var padding float64 = 5
 	var width float64 = constants.ScreenWidth
@@ -54,26 +53,13 @@ func (i *cachedImage) Load() {
 
 func (i *cachedImage) Update(input Input) {
 	if input.HasChanged() {
-		switch input.LastInput() {
-		case KeyDown:
-			i.position.UpdateCoordinatePositionY(5)
-		case KeyLeft:
-			i.position.UpdateCoordinatePositionX(-5)
-		case KeyRight:
-			i.position.UpdateCoordinatePositionX(5)
-		case KeyUp:
-			i.position.UpdateCoordinatePositionY(-5)
-		default:
-		}
 		i.position.Update(input)
-		updateGeometry(&i.Options().GeoM, i.position.X(), i.position.Y(), i.position)
+		updateGeometry(&i.Options().GeoM, i.position.X(), i.position.Y())
 	}
 }
 
-func updateGeometry(geometry *ebiten.GeoM, x *boundaryCoordinate, y *boundaryCoordinate, r Position) {
+func updateGeometry(geometry *ebiten.GeoM, x *boundaryCoordinate, y *boundaryCoordinate) {
 	geometry.Reset()
-	geometry.Rotate(r.Offset().InRadians() + r.Current().InRadians())
-	geometry.Scale(constants.PlayerScale, constants.PlayerScale)
 	geometry.Translate(*x.current, *y.current)
 }
 
