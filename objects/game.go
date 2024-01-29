@@ -3,6 +3,7 @@ package objects
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"go-2du2du/constants"
+	"go-2du2du/services"
 	"image/color"
 )
 
@@ -10,30 +11,36 @@ type Game struct {
 	player    Player
 	input     Input
 	statusBar StatusBar
+	board     Board
+
+	serviceContainer services.ServiceContainer
 }
 
-func NewGame() *Game {
+func NewGame(serviceContainer services.ServiceContainer) *Game {
 	newPlayer := NewPlayer()
 	newInput := NewInput()
-	newStatusBar := NewStatusBar(newPlayer)
+	newStatusBar := NewStatusBar(newPlayer, serviceContainer)
+	newBoard := NewBoard(constants.Columns, constants.Rows, constants.BoardItemWidthBoundary, constants.BoardItemHeightBoundary, serviceContainer)
+
 	return &Game{
-		player:    newPlayer,
-		input:     newInput,
-		statusBar: newStatusBar,
+		player:           newPlayer,
+		input:            newInput,
+		statusBar:        newStatusBar,
+		board:            newBoard,
+		serviceContainer: serviceContainer,
 	}
 }
 
 func (g *Game) Update() error {
 	g.input.Update()
-	g.player.Update(g.input)
-	g.statusBar.Update(g.input)
+	g.board.Update(g.input)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Clear()
 	screen.Fill(color.White)
-	g.player.Draw(screen)
+	g.board.Draw(screen)
 	g.statusBar.Draw(screen)
 }
 

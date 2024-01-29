@@ -3,46 +3,33 @@ package objects
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"go-2du2du/constants"
+	"go-2du2du/services"
 )
 
 type StatusBar interface {
-	Update(i Input)
 	Draw(screen *ebiten.Image)
 }
 
 type statusBar struct {
-	player        Player
-	iconLifeFull  CachedImage
-	iconLifeEmpty CachedImage
+	player           Player
+	serviceContainer services.ServiceContainer
 }
 
-func NewStatusBar(player Player) StatusBar {
-	iconLifeFullPath := constants.HeartFullIconPath
-	iconLifeFull := NewImage(&iconLifeFullPath)
-	iconLifeFull.PreLoadImage()
-	iconLifeEmptyPath := constants.HeartEmptyIconPath
-	iconLifeEmpty := NewImage(&iconLifeEmptyPath)
-	iconLifeEmpty.PreLoadImage()
-	return &statusBar{player: player, iconLifeFull: iconLifeFull, iconLifeEmpty: iconLifeEmpty}
-}
-
-func (s *statusBar) Update(i Input) {
-
+func NewStatusBar(player Player, serviceContainer services.ServiceContainer) StatusBar {
+	return &statusBar{player: player, serviceContainer: serviceContainer}
 }
 
 func (s *statusBar) Draw(screen *ebiten.Image) {
 	perIconSpace := float64(constants.DefaultIconWidth + constants.StatusBarIconGap)
 	x := (constants.ScreenWidth / 2) - ((constants.DefaultLives) / 2 * perIconSpace)
-	y := float64(constants.ScreenHeight - constants.ReservedRowsStatusBar)
+	y := float64(constants.ScreenHeight - constants.ReservedRowsSpaceForStatusBar)
 	for i := 0; i < s.player.Lives(); i++ {
-		s.iconLifeFull.UpdateOptionsCoordinates(x, y)
-		screen.DrawImage(s.iconLifeFull.File(), s.iconLifeFull.Options())
+		s.serviceContainer.ImageDrawingService().Draw(screen, x, y, services.ImageHeartFull)
 		x = x + perIconSpace
 	}
 
 	for i := 0; i < constants.DefaultLives-s.player.Lives(); i++ {
-		s.iconLifeEmpty.UpdateOptionsCoordinates(x, y)
-		screen.DrawImage(s.iconLifeEmpty.File(), s.iconLifeEmpty.Options())
+		s.serviceContainer.ImageDrawingService().Draw(screen, x, y, services.ImageHeartEmpty)
 		x = x + perIconSpace
 	}
 }
