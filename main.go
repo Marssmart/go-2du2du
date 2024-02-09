@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"go-2du2du/objects"
+	"go-2du2du/game/objects"
 	"go-2du2du/services"
 	"log"
 )

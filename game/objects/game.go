@@ -3,13 +3,14 @@ package objects
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"go-2du2du/constants"
+	"go-2du2du/game"
 	"go-2du2du/services"
 	"image/color"
 )
 
 type Game struct {
 	player    Player
-	input     Input
+	input     game.Input
 	statusBar StatusBar
 	board     Board
 
@@ -18,9 +19,9 @@ type Game struct {
 
 func NewGame(serviceContainer services.ServiceContainer) *Game {
 	newPlayer := NewPlayer()
-	newInput := NewInput()
+	newInput := game.NewInput()
 	newStatusBar := NewStatusBar(newPlayer, serviceContainer)
-	newBoard := NewBoard(constants.Columns, constants.Rows, constants.BoardItemWidthBoundary, constants.BoardItemHeightBoundary, serviceContainer)
+	newBoard := NewBoard(constants.Columns, constants.Rows, constants.BoardItemWidthBoundary, constants.BoardItemHeightBoundary, serviceContainer, newPlayer.(Object))
 
 	return &Game{
 		player:           newPlayer,
