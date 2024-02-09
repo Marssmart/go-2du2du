@@ -12,6 +12,7 @@ type ImageKey int
 const (
 	ImagePlayer ImageKey = iota
 	ImageGhost
+	ImageDevil
 	ImageHeartFull
 	ImageHeartEmpty
 )
@@ -25,6 +26,7 @@ func NewImageDrawingService() ImageDrawingService {
 	options := ebiten.DrawImageOptions{}
 	service.imageIndex[ImagePlayer] = &imageContainer{image: LoadImage(constants.PlayerIconPath), options: &options}
 	service.imageIndex[ImageGhost] = &imageContainer{image: LoadImage(constants.GhostIconPath), options: &options}
+	service.imageIndex[ImageDevil] = &imageContainer{image: LoadImage(constants.DevilIconPath), options: &options}
 	service.imageIndex[ImageHeartFull] = &imageContainer{image: LoadImage(constants.HeartFullIconPath), options: &options}
 	service.imageIndex[ImageHeartEmpty] = &imageContainer{image: LoadImage(constants.HeartEmptyIconPath), options: &options}
 	return &service

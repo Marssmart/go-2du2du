@@ -5,7 +5,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"go-2du2du/game/movement"
 	"go-2du2du/services"
-	"log"
 )
 
 type Ghost interface {
@@ -33,14 +32,14 @@ func (g *ghost) Move(x int, y int, maxX int, maxY int) (int, int) {
 	for i := 1; i <= 4; i++ {
 		ok, rX, rY, lastAttemptedDir := current.Update(x, y, maxX, maxY)
 		if ok {
-			log.Printf("Moving %v from %v:%v to %v:%v", current.ToString(), x, y, rX, rY)
+			//	log.Printf("Moving %v from %v:%v to %v:%v", current.ToString(), x, y, rX, rY)
 			return rX, rY
 		}
 		err, newDir := g.behavior.Next(lastAttemptedDir)
 		if err != nil {
 			panic("failed to get next direction")
 		}
-		log.Printf("Could not move %v, switching to %v", current.ToString(), newDir.ToString())
+		//log.Printf("Could not move %v, switching to %v", current.ToString(), newDir.ToString())
 		current = newDir
 	}
 	panic("failed to find move")

@@ -30,20 +30,11 @@ func NewBoard(x int, y int, width float64, height float64, serviceContainer serv
 	b.playerPosition.object = player
 
 	//set ghost mobs
-	mobCell := b.cells[0][0]
-	mobCell.object = NewGhost("first")
+	ghostCell := b.cells[0][0]
+	ghostCell.object = NewGhost("first")
 
-	mobCell2 := b.cells[2][2]
-	mobCell2.object = NewGhost("second")
-
-	mobCell3 := b.cells[4][4]
-	mobCell3.object = NewGhost("third")
-
-	mobCell4 := b.cells[6][6]
-	mobCell4.object = NewGhost("fourth")
-
-	mobCell5 := b.cells[8][8]
-	mobCell5.object = NewGhost("fifth")
+	devilCell := b.cells[3][4]
+	devilCell.object = NewDevil("first")
 
 	return &b
 }
@@ -88,8 +79,12 @@ func (b *board) Update(input game.Input) {
 		default:
 			return
 		}
-		b.Swap(b.playerPosition, b.cells[x][y])
-		b.playerPosition = b.cells[x][y]
+
+		//only swap for valid coordinates
+		if x >= 0 && x <= b.MaxX() && y >= 0 && y <= b.MaxY() {
+			b.Swap(b.playerPosition, b.cells[x][y])
+			b.playerPosition = b.cells[x][y]
+		}
 	}
 
 	now := time.Now()
@@ -99,8 +94,6 @@ func (b *board) Update(input game.Input) {
 		//log.Printf("Moving on time %s", now)
 
 		movableCells := make([]*cell, 0)
-
-		//TODO fix the movement skip
 		for x := range b.cells {
 			for _, c := range b.cells[x] {
 				_, ok := c.object.(MovableObject)
