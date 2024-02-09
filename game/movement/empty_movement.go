@@ -7,7 +7,7 @@ func NewEmptyMovementBehavior() Behavior {
 type emptyMovementBehavior struct {
 }
 
-func (d *emptyMovementBehavior) Next() (error, Direction) {
+func (d *emptyMovementBehavior) Next(lastFailedDirection Direction) (error, Direction) {
 	return nil, None
 }
 

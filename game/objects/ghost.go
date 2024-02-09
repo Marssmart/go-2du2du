@@ -31,12 +31,12 @@ func (g *ghost) Draw(screen *ebiten.Image, serviceContainer services.ServiceCont
 func (g *ghost) Move(x int, y int, maxX int, maxY int) (int, int) {
 	current := g.behavior.Current()
 	for i := 1; i <= 4; i++ {
-		ok, rX, rY := current.Update(x, y, maxX, maxY)
+		ok, rX, rY, lastAttemptedDir := current.Update(x, y, maxX, maxY)
 		if ok {
 			log.Printf("Moving %v from %v:%v to %v:%v", current.ToString(), x, y, rX, rY)
 			return rX, rY
 		}
-		err, newDir := g.behavior.Next()
+		err, newDir := g.behavior.Next(lastAttemptedDir)
 		if err != nil {
 			panic("failed to get next direction")
 		}

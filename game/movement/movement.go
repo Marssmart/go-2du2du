@@ -5,12 +5,12 @@ import "fmt"
 type Direction int
 
 type Movement interface {
-	Update(x int, y int, maxX int, maxY int) (bool, int, int)
+	Update(x int, y int, maxX int, maxY int) (bool, int, int, Direction)
 	ToString() string
 }
 
 type Behavior interface {
-	Next() (error, Direction)
+	Next(lastAttemptedDir Direction) (error, Direction)
 	Current() Direction
 }
 
@@ -51,7 +51,7 @@ func (d Direction) ToString() string {
 	}
 }
 
-func (d Direction) Update(x int, y int, maxX int, maxY int) (bool, int, int) {
+func (d Direction) Update(x int, y int, maxX int, maxY int) (bool, int, int, Direction) {
 	switch d {
 	case Up:
 		return MoveUp(x, y)
@@ -62,64 +62,64 @@ func (d Direction) Update(x int, y int, maxX int, maxY int) (bool, int, int) {
 	case Right:
 		return MoveRight(x, y, maxX)
 	case LeftUpDiagonal:
-		possible, newX, newY := MoveUp(x, y)
+		possible, newX, newY, dir := MoveUp(x, y)
 		if possible {
 			return MoveLeft(newX, newY)
 		}
-		return false, -1, -1
+		return false, -1, -1, dir
 	case RightUpDiagonal:
-		possible, newX, newY := MoveUp(x, y)
+		possible, newX, newY, dir := MoveUp(x, y)
 		if possible {
 			return MoveRight(newX, newY, maxX)
 		}
-		return false, -1, -1
+		return false, -1, -1, dir
 	case LeftDownDiagonal:
-		possible, newX, newY := MoveDown(x, y, maxY)
+		possible, newX, newY, dir := MoveDown(x, y, maxY)
 		if possible {
 			return MoveLeft(newX, newY)
 		}
-		return false, -1, -1
+		return false, -1, -1, dir
 	case RightDownDiagonal:
-		possible, newX, newY := MoveDown(x, y, maxY)
+		possible, newX, newY, dir := MoveDown(x, y, maxY)
 		if possible {
 			return MoveRight(newX, newY, maxX)
 		}
-		return false, -1, -1
+		return false, -1, -1, dir
 	case None:
 		return MoveNone(x, y)
 	default:
-		return false, -1, -1
+		panic(fmt.Sprintf("Unknown direction %v", d))
 	}
 }
 
-func MoveRight(x int, y int, maxX int) (bool, int, int) {
+func MoveRight(x int, y int, maxX int) (bool, int, int, Direction) {
 	if x+1 > maxX {
-		return false, -1, -1
+		return false, -1, -1, Right
 	}
-	return true, x + 1, y
+	return true, x + 1, y, Right
 }
 
-func MoveLeft(x int, y int) (bool, int, int) {
+func MoveLeft(x int, y int) (bool, int, int, Direction) {
 	if x-1 < 0 {
-		return false, -1, -1
+		return false, -1, -1, Left
 	}
-	return true, x - 1, y
+	return true, x - 1, y, Left
 }
 
-func MoveDown(x int, y int, maxY int) (bool, int, int) {
+func MoveDown(x int, y int, maxY int) (bool, int, int, Direction) {
 	if y+1 > maxY {
-		return false, -1, -1
+		return false, -1, -1, Down
 	}
-	return true, x, y + 1
+	return true, x, y + 1, Down
 }
 
-func MoveUp(x int, y int) (bool, int, int) {
+func MoveUp(x int, y int) (bool, int, int, Direction) {
 	if y-1 < 0 {
-		return false, -1, -1
+		return false, -1, -1, Up
 	}
-	return true, x, y - 1
+	return true, x, y - 1, Up
 }
 
-func MoveNone(x int, y int) (bool, int, int) {
-	return true, x, y
+func MoveNone(x int, y int) (bool, int, int, Direction) {
+	return true, x, y, None
 }
